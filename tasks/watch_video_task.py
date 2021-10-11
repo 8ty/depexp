@@ -1,4 +1,5 @@
 from BiliClient import asyncbili
+from queue import Queue
 import logging
 
 import asyncio
@@ -10,27 +11,32 @@ import math
 
 class WatchVideoTask:
 
-    def __init__(self, biliapi, enable, room_id, run_time = 5.5, delete_time = 3, run_no_more_mouth = 2, duplicate = 1):
+    def __init__(self, biliapi, enable, room_id, run_time = 5.5, delete_time = 0, run_no_more_mouth = 2, duplicate = 1):
         self.biliapi = biliapi
         self.enable = enable
-        self.room_id = room_id
         self.run_time = run_time * 60 * 60
-        self.delete_time = delete_time
+        self.delete_time = delete_time if delete_time >= 0 else 0
         self.run_no_more_mouth = run_no_more_mouth
         self.duplicate = duplicate
         self.start_time = time.time()
         self.need_vlist = {}
+        if isinstance(room_id, str):
+            self.room_id = room_id.split(',')
+        elif isinstance(room_id, list):
+            self.room_id = room_id
+        else:
+            self.room_id = [room_id]
 
-    async def get_need_vlist(self, Room_Id):
-        if Room_Id not in self.need_vlist:
-            logging.info(f"获取 up 主{Room_Id}的视频列表")
+    async def get_need_vlist(self, room_id):
+        if room_id not in self.need_vlist:
+            logging.info(f"获取 up 主{room_id}的视频列表")
             need_vlist = []
-            data = await self.biliapi.spaceArcSearch(Room_Id)
+            data = await self.biliapi.spaceArcSearch(room_id)
             pages = int(math.ceil(data["data"]["page"]["count"] / 100))
             for i in range(pages):
-                data = await self.biliapi.spaceArcSearch(Room_Id, i + 1)
+                data = await self.biliapi.spaceArcSearch(room_id, i + 1)
                 need_vlist.extend(data["data"]["list"]["vlist"])
-            self.need_vlist[Room_Id] = need_vlist
+            self.need_vlist[room_id] = need_vlist
 
     async def work(self):
         if not self.enable:
@@ -52,8 +58,9 @@ class WatchVideoTask:
             logging.warning("观看视频模块up主号未配置,已停止...")
         else:
             tasks = []
-            for i in range(self.duplicate):
-                tasks.append(self.watch())
+            for room_id in self.room_id:
+                for i in range(self.duplicate):
+                    tasks.append(self.watch(room_id))
             if tasks:
                 await asyncio.wait(map(asyncio.ensure_future, tasks))
 
@@ -66,23 +73,19 @@ class WatchVideoTask:
                 logging.info(f'删除视频 {cid} 的观看历史记录')
                 break
 
-    async def watch(self):
+    async def watch(self, room_id = None):
         sleep_time = random.randint(0, 15)
         logging.info(f'睡眠{sleep_time}秒，与其他任务错时启动')
         await asyncio.sleep(sleep_time)
         var = 0
-        video_history = []
+        video_history = Queue(self.delete_time)
         while True:
             var += 1
-            if isinstance(self.room_id, list):
-                Room_Id = random.choice(self.room_id)
-            elif isinstance(self.room_id, str):
-                Room_Id = random.choice(self.room_id.split(","))
-            else:
-                Room_Id = self.room_id
-            logging.info("本次观看视频为第 %s 次，选择UP %s" % (var, Room_Id))
-            await self.get_need_vlist(Room_Id)
-            video = random.choice(self.need_vlist[Room_Id])
+            if room_id is None:
+                room_id = random.choice(self.room_id)
+            logging.info("本次观看视频为第 %s 次，选择UP %s" % (var, room_id))
+            await self.get_need_vlist(room_id)
+            video = random.choice(self.need_vlist[room_id])
 
             logging.info("本次观看选择视频为标题  %s，BV： %s" % (video["title"], video["bvid"]))
 
@@ -93,19 +96,17 @@ class WatchVideoTask:
                 logging.info("正在观看 %s 第 %d p，共 %d p" % (video["bvid"], p + 1, len(video_data["data"])))
                 video_cid = video_data["data"][p]["cid"]
                 video_duration = video_data["data"][p]["duration"]
-                if len(video_history) >= self.delete_time:
-                    num_to_delete = len(video_history) - self.delete_time + 1
-                    video_to_delete = video_history[:num_to_delete]
-                    video_history = video_history[num_to_delete:] + [video_cid]
-                    for cid in video_to_delete:
+                if self.delete_time > 0:
+                    if video_history.full():
+                        cid = video_history.get()
                         await self.delete_video_history(cid)
-                else:
-                    video_history.append(video_cid)
+                    video_history.put(video_cid)
 
                 start_ts = time.time()
                 for i in range(video_duration // 15 + 1):
                     if time.time() - self.start_time > self.run_time:
-                        for cid in video_history:
+                        while not video_history.empty():
+                            cid = video_history.get()
                             await self.delete_video_history(cid)
                         return
                     await self.biliapi.watchVideoHeartBeat(video['aid'], video_cid, video['bvid'], video['mid'], i * 15,
