@@ -1,6 +1,7 @@
 name: 'run BiliExp'
 
 on:
+    push:
     schedule:
         -   cron: '0 */5 * * *'
     watch:
@@ -31,3 +32,6 @@ jobs:
           BILICONFIG: ${{ secrets.BILICONFIG }}
           PUSH_MESSAGE: ${{ secrets.PUSH_MESSAGE }}
           DELAY: ${{ secrets.DELAY }}
+
+    - name: KeepAlive
+      uses: gautamkrishnar/keepalive-workflow@master
