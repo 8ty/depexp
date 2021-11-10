@@ -106,9 +106,9 @@
         "watch_task": true,       // 任务:模拟观看一个随机视频(加经验值，会留下观看历史记录)，值为true或false分别代表开启和关闭
         "watch_video_task": {
             "enable": true,
-            "room_id": [351899011, 3454186],
+            "room_id": 351899011,
             "run_time": 5.5,
-            "delete_time": 0,
+            "delete_time": 3,
             "duplicate": 2
         },       // 任务:模拟观看一个up主的随机视频(加经验值，会留下观看历史记录)，值为true或false分别代表开启和关闭
         "share_task": true,       // 任务:模拟分享一个随机视频(加经验值，并不会真的分享)，值为true或false分别代表开启和关闭

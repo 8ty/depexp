@@ -285,12 +285,88 @@ class asyncBiliApi(object):
             'start_ts': start_ts if start_ts is not None else time.time(),
             'type': 3,
             'dt': 2,
-            'play_type': 0
+            'play_type': 0,
+            'from_spmid': '',
+            'spmid': '',
+            'auto_continued_play': 0,
+            'refer_url': '',
+            'bsource': ''
         }
 
         url = "https://api.bilibili.com/x/click-interface/web/heartbeat"
         try:
-            async with self._session.post(url, headers = {"Referer": f'https://www.bilibili.com/{bvid}'}, data = post_data,
+            async with self._session.post(url, headers = {"Referer": f'https://www.bilibili.com/video/av{aid}'}, data = post_data,
+                                          verify_ssl = False) as r:
+                return await r.json()
+        except Exception as e:
+            print(e)
+
+    async def watchVideoReport(self, aid: int = 0) -> Awaitable[Dict[str, Any]]:
+        '''
+        '''
+
+        params = {
+            'from': 'report'
+        }
+
+        url = "https://api.bilibili.com/x/web-interface/cdn/report"
+        try:
+            async with self._session.get(url, params = params, headers = {"Referer": f'https://www.bilibili.com/video/av{aid}'},
+                                         verify_ssl = False) as r:
+                return await r.json()
+        except Exception as e:
+            print(e)
+
+    async def watchVideoCollector(self,
+                                  aid: int = 0,
+                                  ctime: int = 0,
+                                  mid: int = 0,
+                                  response_time: int = 0,
+                                  start_request_ts: int = 0,
+                                  total_time: int = 0
+                                  ) -> Awaitable[Dict[str, Any]]:
+        '''
+        获取指定视频分页信息
+        bvid str 视频bvid
+        '''
+
+        post_data = [{
+            'appInfo': {'appId': 21, 'buvid': '044E8A9D-31B8-416F-89EF-66ECB18D1928155804infoc'},
+            'ctime': int(ctime),
+            'eventCategory': 5,
+            'eventId': 'web.main.net',
+            'extendedFields': {
+                'app_key': 'web_main',
+                'browser': 'Chrome',
+                'business': 'main',
+                'command': 'https://api.bilibili.com/x/web-interface/cdn/report',
+                'connect_time': '0',
+                'dns_time': '0',
+                'exception_msg': '',
+                'hit_cache': '',
+                'href': f'https://www.bilibili.com/video/av{aid}',
+                'http_code': '200',
+                'idc': '',
+                'initiator_type': 'xmlhttprequest',
+                'negotiated_protocol': 'h2',
+                'real_request_url': f'https://www.bilibili.com/video/av{aid}',
+                'referer': 'https://www.bilibili.com/',
+                'request_args': 'from=report',
+                'request_time': '0',
+                'response_time': f'{int(response_time)}',
+                'server_ip': '',
+                'start_request_ts': f'{int(start_request_ts)}',
+                'total_time': f'{int(total_time)}',
+                'ua': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+                'x_cache_webcdn': 'BYPASS from blzone02',
+            },
+            'mid': str(mid),
+            'runtimeInfo': {'network': '2'}
+        }]
+
+        url = "https://api.bilibili.com/x/click-interface/web/heartbeat"
+        try:
+            async with self._session.post(url, headers = {"Referer": f'https://www.bilibili.com/video/av{aid}'}, json = post_data,
                                           verify_ssl = False) as r:
                 return await r.json()
         except Exception as e:

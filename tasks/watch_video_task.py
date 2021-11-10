@@ -102,20 +102,27 @@ class WatchVideoTask:
                         await self.delete_video_history(cid)
                     video_history.put(video_cid)
 
+                # start_ts = time.time()
+                # await self.biliapi.watchVideoReport(video['aid'])
+                # rep = await self.biliapi.watchVideoCollector(video['aid'], start_ts * 1000, self.biliapi.uid, random.randint(1000, 1500),
+                #                                              start_ts, random.randint(70, 90))
                 start_ts = time.time()
-                for i in range(video_duration // 15 + 1):
+                start_time = random.randint(1, 3)
+                await asyncio.sleep(start_time)
+                cur_time = start_time
+                while cur_time <= video_duration:
                     if time.time() - self.start_time > self.run_time:
                         while not video_history.empty():
                             cid = video_history.get()
                             await self.delete_video_history(cid)
                         return
-                    await self.biliapi.watchVideoHeartBeat(video['aid'], video_cid, video['bvid'], video['mid'], i * 15,
-                                                           start_ts = start_ts)
-                    if i < video_duration // 15:
+                    rep = await self.biliapi.watchVideoHeartBeat(video['aid'], video_cid, video['bvid'], self.biliapi.uid, cur_time,
+                                                                 start_ts = start_ts)
+                    if cur_time + 15 <= video_duration:
                         await asyncio.sleep(15)
-                    elif video_duration > i * 15:
-                        await asyncio.sleep(video_duration - i * 15)
-                        await self.biliapi.watchVideoHeartBeat(video['aid'], video_cid, video['bvid'], video['mid'], video_duration,
+                    else:
+                        await asyncio.sleep(video_duration - cur_time)
+                        await self.biliapi.watchVideoHeartBeat(video['aid'], video_cid, video['bvid'], self.biliapi.uid, video_duration,
                                                                start_ts = start_ts)
 
 
