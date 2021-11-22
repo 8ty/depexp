@@ -378,12 +378,12 @@ class asyncBiliApi(object):
         '''
 
         params = {
-            'max': 0,
-            'view_at': 0,
-            'business': '',
+            'pn': 0,
+            'ps': 300,
+            'jsonp': 'jsonp',
         }
 
-        url = "https://api.bilibili.com/x/web-interface/history/cursor"
+        url = "https://api.bilibili.com/x/v2/history"
         try:
             async with self._session.get(url, params = params, verify_ssl = False) as r:
                 return await r.json()
