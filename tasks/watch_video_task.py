@@ -120,10 +120,12 @@ class WatchVideoTask:
                                                                  start_ts = start_ts)
                     if cur_time + 15 <= video_duration:
                         await asyncio.sleep(15)
+                        cur_time += 15
                     else:
                         await asyncio.sleep(video_duration - cur_time)
                         await self.biliapi.watchVideoHeartBeat(video['aid'], video_cid, video['bvid'], self.biliapi.uid, video_duration,
                                                                start_ts = start_ts)
+                        break
 
 
 async def watch_video_task(biliapi: asyncbili, task_config: dict) -> None:
