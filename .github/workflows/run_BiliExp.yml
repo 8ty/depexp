@@ -4,14 +4,11 @@ on:
     push:
     schedule:
         -   cron: '0 */5 * * *'
-    watch:
-        types: started
     workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    if: github.repository != 'happy888888/BiliExp' || github.event_name == 'workflow_dispatch'
     steps:
     - uses: actions/checkout@v2
       with: 
@@ -28,10 +25,7 @@ jobs:
     - name: 执行BiliExp
       run: bash ./run_in_Actions/run_BiliExp.sh
       env:
-          ADVCONFIG: ${{ secrets.ADVCONFIG }}
-          BILICONFIG: ${{ secrets.BILICONFIG }}
-          PUSH_MESSAGE: ${{ secrets.PUSH_MESSAGE }}
-          DELAY: ${{ secrets.DELAY }}
+          CONFIG: ${{ secrets.CONFIG }}
 
     - name: KeepAlive
       uses: gautamkrishnar/keepalive-workflow@master

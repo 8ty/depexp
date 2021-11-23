@@ -112,9 +112,9 @@
             "duplicate": 2
         },       // 任务:模拟观看一个up主的随机视频(加经验值，会留下观看历史记录)，值为true或false分别代表开启和关闭
         "delete_video_history_task": {
-            "enable": true,
-            "room_id": 351899011,
-            "run_time": 5.5,
+            "enable": false,
+            "room_id": 0,
+            "run_time": 0,
             "delete_time": 3,
             "sleep_time": 3
         },       // 任务:删除观看一个up主的视频历史记录，值为true或false分别代表开启和关闭

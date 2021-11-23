@@ -80,6 +80,13 @@ def load_config(path: str) -> OrderedDict:
         else:
             config.update(local_config)
 
+    if 'CONFIG' in os.environ:
+        env_config = loads(os.environ['CONFIG'], object_pairs_hook = OrderedDict)
+        if config is None:
+            config = env_config
+        else:
+            config.update(env_config)
+
     if config is None:
         raise RuntimeError('未找到配置文件')
     else:
