@@ -54,7 +54,7 @@ class DeleteVideoHistoryTask:
                 logging.info(f'删除视频 {video_history["title"]} 的观看历史记录')
 
     async def delete(self, room_id = None):
-        while True:
+        while time.time() - self.start_time < self.run_time:
             if room_id is None:
                 room_id = random.choice(self.room_id)
 
