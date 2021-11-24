@@ -42,16 +42,14 @@ class DeleteVideoHistoryTask:
                 await asyncio.wait(map(asyncio.ensure_future, tasks))
 
     async def delete_video_history(self, room_id):
-        count = 0
         video_history_data = await self.biliapi.getVideoHistory()
-        for video_history in video_history_data['data']:
-            if video_history['owner']['mid'] == room_id and video_history['progress'] == -1:
-                count += 1
-                if count <= self.delete_time:
-                    continue
-                kid = video_history['kid']
-                await self.biliapi.deleteVideoHistory(kid)
-                logging.info(f'删除视频 {video_history["title"]} 的观看历史记录')
+        video_history = [v for v in video_history_data['data'] if v['owner']['mid'] == room_id]
+        delete_video_history = [v for v in video_history if v['progress'] == -1]
+        delete_video_history = delete_video_history[self.delete_time * (len(video_history) - len(delete_video_history)):]
+        for v in delete_video_history:
+            kid = v['kid']
+            await self.biliapi.deleteVideoHistory(kid)
+            logging.info(f'删除视频 {v["title"]} 的观看历史记录')
 
     async def delete(self, room_id = None):
         while time.time() - self.start_time < self.run_time:
